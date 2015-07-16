@@ -8,21 +8,24 @@ var argv = require('minimist')(process.argv.slice(2));
 var log = require('verbalize');
 var sniff = require('../lib/sniff');
 
-function closeAndExit() {
-  if (sniff) {
-    log.done('stopping');
-    sniff.stop();
-  }
+// The default interval used for the alarm window
+var ALARM_INTERVAL = 120000;
 
-  log.done('exiting');
+// The AVG number of requests where we fire an alarm
+var ALARM_THRESHOLD = 10;
+
+// The default interval used to report changes to the UI
+var REPORTING_INTERVAL = 10000;
+
+function closeAndExit() {
+  if (sniff  && sniff.isRunning()) {
+    log.done('stopping packet capture');
+    sniff.stop();
+    log.done('exiting bloodhound');
+  }
   process.exit(0);
 }
-
-// process.stdin.setRawMode(false);
-// process.stdin.resume();
 process.on('exit', closeAndExit);
-process.on('SIGINT', closeAndExit);
-process.on('SIGTERM', closeAndExit);
 
 function displayHelp() {
   log.writeln();
@@ -40,7 +43,12 @@ function displayHelp() {
   log.success('         "          "     "                                          ');
   log.writeln();
   log.error('To run the hypermedia bloodhoud, execute the following');
-  log.error('$ bloodhound --interface en0');
+  log.error('$ bloodhound --interface en0 --pollInterval 10000 --alarmInterval 120000 --alarmTrigger 10');
+  log.error('');
+  log.error('  --interface         the networking interface bloodhound should listen on, run "$ ifconfig" to get a list if you are not sure');
+  log.error('  --alarmInterval     how long the alarm is window is, defaults to 120000ms (2 minutes)');
+  log.error('  --alarmThreshold    the AVG number of requests per site where we trigger an alarm, defaults to 10');
+  log.error('  --reportingInterval how often we report the data to the UI, defaults to 10000ms (10 seconds)');
 }
 
 // Verbalize `runner`
@@ -56,5 +64,12 @@ if (process.getuid() !== 0) {
   process.exit(0);
 }
 
+var options = {
+  interface: argv.interface,
+  alarmInterval: argv.alarmInterval || ALARM_INTERVAL,
+  alarmThreshold: argv.alarmThreshold || ALARM_THRESHOLD,
+  reportingInterval: argv.reportingInterval || REPORTING_INTERVAL
+};
+
 // start up bloodhound
-sniff.start(argv.interface);
+sniff.start(options);
