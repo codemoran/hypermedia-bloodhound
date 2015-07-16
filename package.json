@@ -35,9 +35,11 @@
   },
   "scripts": {
     "postinstall": "pushd node_modules/geoip-lite && npm run-script updatedb && popd",
-    "test": "mocha -R test"
+    "test": "./node_modules/.bin/mocha --reporter spec"
   },
   "dependencies": {
+    "chai": "^3.0.0",
+    "chai-spies": "^0.6.0",
     "geoip-lite": "^1.1.6",
     "heap": "^0.2.6",
     "minimist": "~0.0.8",
