@@ -108,6 +108,24 @@ describe('Bloodhound Alarms', function() {
       }, 400);
     });
 
+    it('does resolve an alarm if we no longer receive data', function(done) {
+      var alarm = new Alarm();
+      var errTimeout = setTimeout(function() {
+        alarm.stop();
+        assert(false, 'Alarm was NOT resolved');
+        done();
+      }, 1000);
+      alarm.on('resolved', function() {
+        clearTimeout(errTimeout);
+        alarm.stop();
+        assert(true);
+        done();
+      });
+
+      alarm.start(300, 100, 20);
+      generateData(alarm, 30, 3);
+    });
+
     it('does not resolve an alarm if the data is above the threshold', function(done) {
       var alarm = new Alarm();
       var errTimeout = setTimeout(function() {
@@ -131,7 +149,7 @@ describe('Bloodhound Alarms', function() {
       }, 200);
     });
 
-    it('does not resolve an alarm if the alarm is not already triggered', function() {
+    it('does not try to resolve an alarm if the alarm is not triggered', function() {
       var alarm = new Alarm();
       var errTimeout = setTimeout(function() {
         clearInterval(interval);
